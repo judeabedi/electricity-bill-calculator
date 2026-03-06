@@ -46,15 +46,13 @@ void loadAppliancesFromFile() {
     if (!file.is_open()) return;
 
     Appliance a;
-
     while (getline(file, a.name, ',')) {
         file >> a.powerW;
-        file.ignore();           // skip comma
+        file.ignore();
         file >> a.hoursPerDay;
-        file.ignore();           // skip newline
+        file.ignore();
         appliances.push_back(a);
     }
-
     file.close();
 }
 
@@ -131,7 +129,6 @@ void energySummary() {
     for (auto &a : appliances) {
         cout << a.name << " -> " << a.energyKWhPerDay() << " kWh/day\n";
     }
-
     cout << "Total = " << totalEnergy() << " kWh/day\n";
 }
 
@@ -163,6 +160,29 @@ void searchAppliance() {
     if (!found) cout << "Appliance not found.\n";
 }
 
+void calculateBill() {
+    if (appliances.empty()) {
+        cout << "No appliances available.\n";
+        return;
+    }
+
+    double cost;
+    cout << "Enter cost per kWh: ";
+    cin >> cost;
+
+    if (cin.fail()) {
+        clearBadInput();
+        cout << "Invalid cost.\n";
+        return;
+    }
+
+    double energy = totalEnergy();
+    double bill = energy * cost;
+
+    cout << "\nTotal Energy: " << energy << " kWh/day\n";
+    cout << "Electricity Bill: " << bill << endl;
+}
+
 int main() {
     loadAppliancesFromFile();
 
@@ -173,27 +193,21 @@ int main() {
             case 1:
                 appliances.push_back(registerAppliance());
                 break;
-
             case 2:
                 viewAppliances();
                 break;
-
             case 3:
                 searchAppliance();
                 break;
-
             case 4:
                 energySummary();
                 break;
-
             case 5:
-                cout << "Feature not implemented yet.\n";
+                calculateBill();
                 break;
-
             case 0:
                 cout << "Goodbye\n";
                 return 0;
-
             default:
                 cout << "Invalid choice\n";
         }
