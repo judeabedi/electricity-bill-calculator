@@ -41,6 +41,23 @@ void saveApplianceToFile(const Appliance& a) {
     }
 }
 
+void loadAppliancesFromFile() {
+    ifstream file(APPLIANCE_FILE);
+    if (!file.is_open()) return;
+
+    Appliance a;
+
+    while (getline(file, a.name, ',')) {
+        file >> a.powerW;
+        file.ignore();           // skip comma
+        file >> a.hoursPerDay;
+        file.ignore();           // skip newline
+        appliances.push_back(a);
+    }
+
+    file.close();
+}
+
 int menu() {
     cout << "\n==============================\n";
     cout << " Electrical Load Monitoring\n";
@@ -147,6 +164,8 @@ void searchAppliance() {
 }
 
 int main() {
+    loadAppliancesFromFile();
+
     while (true) {
         int choice = menu();
 
