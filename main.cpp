@@ -2,6 +2,9 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include <algorithm>
+#include <cctype>
+
 using namespace std;
 
 struct Appliance {
@@ -19,6 +22,12 @@ vector<Appliance> appliances;
 void clearBadInput() {
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+string toLowerStr(string s) {
+    transform(s.begin(), s.end(), s.begin(),
+              [](unsigned char c){ return tolower(c); });
+    return s;
 }
 
 int menu() {
@@ -97,6 +106,34 @@ void energySummary() {
     cout << "Total = " << totalEnergy() << " kWh/day\n";
 }
 
+void searchAppliance() {
+    if (appliances.empty()) {
+        cout << "No appliances available.\n";
+        return;
+    }
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    string name;
+    cout << "Enter appliance name: ";
+    getline(cin, name);
+
+    string q = toLowerStr(name);
+    bool found = false;
+
+    for (auto &a : appliances) {
+        if (toLowerStr(a.name).find(q) != string::npos) {
+            cout << a.name
+                 << " | " << a.powerW << "W"
+                 << " | " << a.hoursPerDay << " hrs"
+                 << " | " << a.energyKWhPerDay() << " kWh/day\n";
+            found = true;
+        }
+    }
+
+    if (!found) cout << "Appliance not found.\n";
+}
+
 int main() {
     while (true) {
         int choice = menu();
@@ -111,7 +148,7 @@ int main() {
                 break;
 
             case 3:
-                cout << "Feature not implemented yet.\n";
+                searchAppliance();
                 break;
 
             case 4:
