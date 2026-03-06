@@ -4,8 +4,11 @@
 #include <limits>
 #include <algorithm>
 #include <cctype>
+#include <fstream>
 
 using namespace std;
+
+const string APPLIANCE_FILE = "appliances.txt";
 
 struct Appliance {
     string name;
@@ -28,6 +31,14 @@ string toLowerStr(string s) {
     transform(s.begin(), s.end(), s.begin(),
               [](unsigned char c){ return tolower(c); });
     return s;
+}
+
+void saveApplianceToFile(const Appliance& a) {
+    ofstream file(APPLIANCE_FILE, ios::app);
+    if (file.is_open()) {
+        file << a.name << "," << a.powerW << "," << a.hoursPerDay << endl;
+        file.close();
+    }
 }
 
 int menu() {
@@ -66,7 +77,8 @@ Appliance registerAppliance() {
     cout << "Enter usage hours per day: ";
     cin >> a.hoursPerDay;
 
-    cout << "Appliance registered successfully.\n";
+    saveApplianceToFile(a);
+    cout << "Appliance saved successfully.\n";
     return a;
 }
 
