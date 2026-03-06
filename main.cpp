@@ -61,6 +61,42 @@ Appliance registerAppliance() {
     return a;
 }
 
+void viewAppliances() {
+    if (appliances.empty()) {
+        cout << "No appliances registered.\n";
+        return;
+    }
+
+    cout << "\nAppliances List\n";
+    for (size_t i = 0; i < appliances.size(); i++) {
+        cout << i + 1 << ". "
+             << appliances[i].name
+             << " | Power: " << appliances[i].powerW
+             << "W | Hours: " << appliances[i].hoursPerDay
+             << endl;
+    }
+}
+
+double totalEnergy() {
+    double total = 0;
+    for (auto &a : appliances) total += a.energyKWhPerDay();
+    return total;
+}
+
+void energySummary() {
+    if (appliances.empty()) {
+        cout << "No appliances.\n";
+        return;
+    }
+
+    cout << "\nEnergy Summary\n";
+    for (auto &a : appliances) {
+        cout << a.name << " -> " << a.energyKWhPerDay() << " kWh/day\n";
+    }
+
+    cout << "Total = " << totalEnergy() << " kWh/day\n";
+}
+
 int main() {
     while (true) {
         int choice = menu();
@@ -71,8 +107,17 @@ int main() {
                 break;
 
             case 2:
+                viewAppliances();
+                break;
+
             case 3:
+                cout << "Feature not implemented yet.\n";
+                break;
+
             case 4:
+                energySummary();
+                break;
+
             case 5:
                 cout << "Feature not implemented yet.\n";
                 break;
