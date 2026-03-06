@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include <iomanip>
 #include <algorithm>
 #include <cctype>
 #include <fstream>
@@ -105,11 +106,12 @@ void viewAppliances() {
     }
 
     cout << "\nAppliances List\n";
+    cout << fixed << setprecision(2);
+
     for (size_t i = 0; i < appliances.size(); i++) {
-        cout << i + 1 << ". "
-             << appliances[i].name
-             << " | Power: " << appliances[i].powerW
-             << "W | Hours: " << appliances[i].hoursPerDay
+        cout << i + 1 << ". " << appliances[i].name
+             << " | Power: " << appliances[i].powerW << "W"
+             << " | Hours: " << appliances[i].hoursPerDay
              << endl;
     }
 }
@@ -127,9 +129,12 @@ void energySummary() {
     }
 
     cout << "\nEnergy Summary\n";
+    cout << fixed << setprecision(3);
+
     for (auto &a : appliances) {
         cout << a.name << " -> " << a.energyKWhPerDay() << " kWh/day\n";
     }
+
     cout << "Total = " << totalEnergy() << " kWh/day\n";
 }
 
@@ -147,6 +152,8 @@ void searchAppliance() {
 
     string q = toLowerStr(name);
     bool found = false;
+
+    cout << fixed << setprecision(3);
 
     for (auto &a : appliances) {
         if (toLowerStr(a.name).find(q) != string::npos) {
@@ -180,19 +187,24 @@ void calculateBill() {
     double energy = totalEnergy();
     double bill = energy * cost;
 
+    cout << fixed << setprecision(3);
     cout << "\nTotal Energy: " << energy << " kWh/day\n";
+
+    cout << fixed << setprecision(2);
     cout << "Electricity Bill: " << bill << endl;
 
     ofstream file(BILL_FILE);
     if (file.is_open()) {
         file << "Billing Summary\n";
         file << "====================\n";
+        file << fixed << setprecision(3);
 
         for (auto &a : appliances) {
             file << a.name << " -> " << a.energyKWhPerDay() << " kWh/day\n";
         }
 
         file << "\nTotal Energy: " << energy << " kWh/day\n";
+        file << fixed << setprecision(2);
         file << "Total Bill: " << bill << endl;
 
         file.close();
