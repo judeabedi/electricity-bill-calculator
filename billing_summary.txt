@@ -1,0 +1,7 @@
+Billing Summary
+====================
+Frigde -> 7.2 kWh/day
+Induction Cooker -> 1.2 kWh/day
+
+Total Energy: 8.4 kWh/day
+Total Bill: 6.72

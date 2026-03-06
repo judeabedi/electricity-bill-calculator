@@ -1,0 +1,3 @@
+Frigde,300,24
+Induction Cooker,400,3        
+Bulb,12,11

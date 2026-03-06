@@ -1,11 +1,9 @@
 #include <iostream>
-#include <vector>
-#include <string>
-#include <limits>
-#include <iomanip>
-#include <algorithm>
-#include <cctype>
 #include <fstream>
+#include <string>
+#include <vector>
+#include <limits>
+#include <algorithm>
 
 using namespace std;
 
@@ -14,51 +12,65 @@ const string BILL_FILE = "billing_summary.txt";
 
 struct Appliance {
     string name;
-    double powerW;
-    double hoursPerDay;
-
-    double energyKWhPerDay() const {
-        return (powerW * hoursPerDay) / 1000.0;
-    }
+    double power;
+    double hours;
 };
 
-vector<Appliance> appliances;
+vector<Appliance> applianceList;
 
-void clearBadInput() {
+void clearInput() {
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
-string toLowerStr(string s) {
-    transform(s.begin(), s.end(), s.begin(),
-              [](unsigned char c){ return tolower(c); });
-    return s;
+string toLowerCase(string text) {
+    for (int i = 0; i < text.length(); i++) {
+        text[i] = tolower(text[i]);
+    }
+    return text;
 }
 
-void saveApplianceToFile(const Appliance& a) {
+double calculateEnergyPerDay(Appliance item) {
+    return (item.power * item.hours) / 1000.0;
+}
+
+void saveAppliance(Appliance item) {
     ofstream file(APPLIANCE_FILE, ios::app);
+
     if (file.is_open()) {
-        file << a.name << "," << a.powerW << "," << a.hoursPerDay << endl;
+        file << item.name << "," << item.power << "," << item.hours << endl;
         file.close();
     }
 }
 
-void loadAppliancesFromFile() {
+void loadAppliances() {
     ifstream file(APPLIANCE_FILE);
-    if (!file.is_open()) return;
 
-    Appliance a;
-    while (getline(file, a.name, ',')) {
-        file >> a.powerW;
-        file.ignore();
-        file >> a.hoursPerDay;
-        file.ignore();
-        appliances.push_back(a);
+    if (!file.is_open()) {
+        return;
     }
+
+    string name;
+    double power;
+    double hours;
+    char comma;
+
+    while (getline(file, name, ',')) {
+        file >> power >> comma >> hours;
+        file.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        Appliance item;
+        item.name = name;
+        item.power = power;
+        item.hours = hours;
+
+        applianceList.push_back(item);
+    }
+
     file.close();
 }
 
-int menu() {
+void showMenu() {
     cout << "\n==============================\n";
     cout << " Electrical Load Monitoring\n";
     cout << "==============================\n";
@@ -69,178 +81,194 @@ int menu() {
     cout << "5. Calculate electricity bill\n";
     cout << "0. Exit\n";
     cout << "Choose: ";
-
-    int choice;
-    cin >> choice;
-
-    if (cin.fail()) {
-        clearBadInput();
-        return -1;
-    }
-    return choice;
 }
 
-Appliance registerAppliance() {
-    Appliance a;
+void registerAppliance() {
+    Appliance item;
 
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     cout << "Enter appliance name: ";
-    getline(cin, a.name);
+    getline(cin, item.name);
 
     cout << "Enter power rating (W): ";
-    cin >> a.powerW;
+    cin >> item.power;
+
+    if (cin.fail()) {
+        clearInput();
+        cout << "Invalid power input.\n";
+        return;
+    }
 
     cout << "Enter usage hours per day: ";
-    cin >> a.hoursPerDay;
+    cin >> item.hours;
 
-    saveApplianceToFile(a);
+    if (cin.fail()) {
+        clearInput();
+        cout << "Invalid hours input.\n";
+        return;
+    }
+
+    applianceList.push_back(item);
+    saveAppliance(item);
+
     cout << "Appliance saved successfully.\n";
-    return a;
 }
 
 void viewAppliances() {
-    if (appliances.empty()) {
+    if (applianceList.empty()) {
         cout << "No appliances registered.\n";
         return;
     }
 
     cout << "\nAppliances List\n";
-    cout << fixed << setprecision(2);
 
-    for (size_t i = 0; i < appliances.size(); i++) {
-        cout << i + 1 << ". " << appliances[i].name
-             << " | Power: " << appliances[i].powerW << "W"
-             << " | Hours: " << appliances[i].hoursPerDay
+    for (int i = 0; i < applianceList.size(); i++) {
+        cout << i + 1 << ". "
+             << applianceList[i].name
+             << " | Power: " << applianceList[i].power << "W"
+             << " | Hours: " << applianceList[i].hours
              << endl;
     }
 }
 
-double totalEnergy() {
-    double total = 0;
-    for (auto &a : appliances) total += a.energyKWhPerDay();
-    return total;
-}
-
-void energySummary() {
-    if (appliances.empty()) {
-        cout << "No appliances.\n";
-        return;
-    }
-
-    cout << "\nEnergy Summary\n";
-    cout << fixed << setprecision(3);
-
-    for (auto &a : appliances) {
-        cout << a.name << " -> " << a.energyKWhPerDay() << " kWh/day\n";
-    }
-
-    cout << "Total = " << totalEnergy() << " kWh/day\n";
-}
-
 void searchAppliance() {
-    if (appliances.empty()) {
+    if (applianceList.empty()) {
         cout << "No appliances available.\n";
         return;
     }
 
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-    string name;
+    string searchName;
     cout << "Enter appliance name: ";
-    getline(cin, name);
+    getline(cin, searchName);
 
-    string q = toLowerStr(name);
+    searchName = toLowerCase(searchName);
+
     bool found = false;
 
-    cout << fixed << setprecision(3);
+    for (int i = 0; i < applianceList.size(); i++) {
+        string currentName = toLowerCase(applianceList[i].name);
 
-    for (auto &a : appliances) {
-        if (toLowerStr(a.name).find(q) != string::npos) {
-            cout << a.name
-                 << " | " << a.powerW << "W"
-                 << " | " << a.hoursPerDay << " hrs"
-                 << " | " << a.energyKWhPerDay() << " kWh/day\n";
+        if (currentName.find(searchName) != string::npos) {
+            cout << applianceList[i].name
+                 << " | " << applianceList[i].power << "W"
+                 << " | " << applianceList[i].hours << " hrs"
+                 << " | " << calculateEnergyPerDay(applianceList[i]) << " kWh/day\n";
             found = true;
         }
     }
 
-    if (!found) cout << "Appliance not found.\n";
+    if (!found) {
+        cout << "Appliance not found.\n";
+    }
+}
+
+double getTotalEnergy() {
+    double total = 0;
+
+    for (int i = 0; i < applianceList.size(); i++) {
+        total += calculateEnergyPerDay(applianceList[i]);
+    }
+
+    return total;
+}
+
+void energySummary() {
+    if (applianceList.empty()) {
+        cout << "No appliances.\n";
+        return;
+    }
+
+    cout << "\nEnergy Summary\n";
+
+    for (int i = 0; i < applianceList.size(); i++) {
+        cout << applianceList[i].name
+             << " -> "
+             << calculateEnergyPerDay(applianceList[i])
+             << " kWh/day\n";
+    }
+
+    cout << "Total = " << getTotalEnergy() << " kWh/day\n";
 }
 
 void calculateBill() {
-    if (appliances.empty()) {
+    if (applianceList.empty()) {
         cout << "No appliances available.\n";
         return;
     }
 
-    double cost;
+    double costPerKWh;
+
     cout << "Enter cost per kWh: ";
-    cin >> cost;
+    cin >> costPerKWh;
 
     if (cin.fail()) {
-        clearBadInput();
-        cout << "Invalid cost.\n";
+        clearInput();
+        cout << "Invalid cost input.\n";
         return;
     }
 
-    double energy = totalEnergy();
-    double bill = energy * cost;
+    double totalEnergy = getTotalEnergy();
+    double totalBill = totalEnergy * costPerKWh;
 
-    cout << fixed << setprecision(3);
-    cout << "\nTotal Energy: " << energy << " kWh/day\n";
-
-    cout << fixed << setprecision(2);
-    cout << "Electricity Bill: " << bill << endl;
+    cout << "\nTotal Energy: " << totalEnergy << " kWh/day\n";
+    cout << "Electricity Bill: " << totalBill << endl;
 
     ofstream file(BILL_FILE);
+
     if (file.is_open()) {
         file << "Billing Summary\n";
         file << "====================\n";
-        file << fixed << setprecision(3);
 
-        for (auto &a : appliances) {
-            file << a.name << " -> " << a.energyKWhPerDay() << " kWh/day\n";
+        for (int i = 0; i < applianceList.size(); i++) {
+            file << applianceList[i].name
+                 << " -> "
+                 << calculateEnergyPerDay(applianceList[i])
+                 << " kWh/day\n";
         }
 
-        file << "\nTotal Energy: " << energy << " kWh/day\n";
-        file << fixed << setprecision(2);
-        file << "Total Bill: " << bill << endl;
+        file << "\nTotal Energy: " << totalEnergy << " kWh/day\n";
+        file << "Total Bill: " << totalBill << endl;
 
         file.close();
-        cout << "Billing summary saved to billing_summary.txt\n";
-    } else {
-        cout << "Failed to write billing summary file.\n";
     }
+
+    cout << "Billing summary saved to billing_summary.txt\n";
 }
 
 int main() {
-    loadAppliancesFromFile();
+    loadAppliances();
 
-    while (true) {
-        int choice = menu();
+    int choice;
 
-        switch (choice) {
-            case 1:
-                appliances.push_back(registerAppliance());
-                break;
-            case 2:
-                viewAppliances();
-                break;
-            case 3:
-                searchAppliance();
-                break;
-            case 4:
-                energySummary();
-                break;
-            case 5:
-                calculateBill();
-                break;
-            case 0:
-                cout << "Goodbye\n";
-                return 0;
-            default:
-                cout << "Invalid choice\n";
+    do {
+        showMenu();
+        cin >> choice;
+
+        if (cin.fail()) {
+            clearInput();
+            choice = -1;
         }
-    }
+
+        if (choice == 1) {
+            registerAppliance();
+        } else if (choice == 2) {
+            viewAppliances();
+        } else if (choice == 3) {
+            searchAppliance();
+        } else if (choice == 4) {
+            energySummary();
+        } else if (choice == 5) {
+            calculateBill();
+        } else if (choice == 0) {
+            cout << "Goodbye\n";
+        } else {
+            cout << "Invalid choice\n";
+        }
+
+    } while (choice != 0);
+
+    return 0;
 }
